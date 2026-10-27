@@ -1,0 +1,12 @@
+#!/bin/sh
+# OpenSSH wrapper used by the ManageIQ KVM provider as libvirt's ssh "command"
+# (qemu+ssh://...?command=<this file>).
+#   - accept a KVM host's key the first time, refuse it if it later CHANGES
+#   - never prompt (BatchMode), fail fast when the host is down
+exec ssh \
+  -o StrictHostKeyChecking=accept-new \
+  -o BatchMode=yes \
+  -o ConnectTimeout=15 \
+  -o ServerAliveInterval=30 \
+  -o ServerAliveCountMax=3 \
+  "$@"

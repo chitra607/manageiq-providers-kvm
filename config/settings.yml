@@ -1,0 +1,74 @@
+:ems:
+  :ems_kvm:
+    # Events that should never trigger policy/alert evaluation.
+    :blacklisted_event_names: []
+
+    # C&U: capture a VM again once its last capture is older than this.
+    # libvirt has no metrics history, so each capture is one sample "now";
+    # keep this just under the scheduler's performance_collection_interval
+    # (3.minutes) so every timer run takes a sample.
+    :metrics_capture_threshold: 2.minutes
+
+    # Provisioning: max time for one disk copy (full clone). Must stay below
+    # the Automate CheckProvisioned budget (100 retries x 1 minute by default);
+    # raise max_retries of CheckProvisioned in your Automate domain first.
+    :provision_clone_timeout: 80.minutes
+
+    # Map KVM event types to ManageIQ event groups.
+    # Event groups control which Automate instances and alert profiles fire.
+    :event_handling:
+      :event_groups:
+        :vm_lifecycle:
+          :critical:
+            - KVMVmPoweredOnEvent
+            - KVMVmPoweredOffEvent
+            - KVMVmShutdownEvent
+            - KVMVmCrashedEvent
+            - KVMVmDestroyedEvent
+          :detail:
+            - KVMVmSuspendedEvent
+            - KVMVmResumedEvent
+            - KVMVmDiscoveredOffEvent
+        :vm_configuration:
+          :detail:
+            - KVMVmStateChangeEvent
+
+:ems_refresh:
+  :kvm:
+    :refresh_interval: 15.minutes
+    # true = offer qcow2/raw volumes that no VM uses as provisioning templates
+    :discover_templates: false
+
+:http_proxy:
+  :kvm:
+    :host:
+    :password:
+    :port:
+    :user:
+
+:log:
+  :level_kvm: info
+
+:workers:
+  :worker_base:
+    :event_catcher:
+      :event_catcher_kvm:
+        :poll: 20.seconds
+
+        # How often the worker sends a heartbeat to ManageIQ.
+        :heartbeat_freq: 60.seconds
+
+        # Restart the event catcher worker if it has been running for this long
+        # (guards against slow memory growth).
+        :restart_interval: 2.hours
+
+    :queue_worker_base:
+      :ems_metrics_collector_worker:
+        :ems_metrics_collector_worker_kvm:
+          # Number of parallel metric collection workers.  1 is sufficient for
+          # small deployments; increase to 2–4 for large numbers of VMs.
+          :count: 1
+          :poll:  1.minutes
+
+      :ems_refresh_worker:
+        :ems_refresh_worker_kvm: {}
